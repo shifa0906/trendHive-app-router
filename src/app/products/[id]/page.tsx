@@ -1,37 +1,61 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { Product } from "@/types";
 import ProductDetail from "@/components/ProductDetail";
 
-async function getProduct(id: string): Promise<Product | null> {
-  try {
-    const res = await fetch(`https://fakestoreapi.com/products/${id}`, {
-      cache: "no-store",
-    });
+export default function ProductDetailPage() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
 
-    if (!res.ok) {
-      console.error("Failed to fetch product", id, "status:", res.status);
-      return null;
+  const [product, setProduct] = useState<Product | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!id) return;
+
+    async function fetchProduct() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const res = await fetch(`https://fakestoreapi.com/products/${id}`);
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch product. Status: ${res.status}`);
+        }
+
+        const data: Product = await res.json();
+        setProduct(data);
+      } catch (err) {
+        console.error("Error loading product:", err);
+        setError("Oops, we couldn't load this product. Please try again.");
+      } finally {
+        setLoading(false);
+      }
     }
 
-    return res.json();
-  } catch (err) {
-    console.error("Error fetching product", id, err);
-    return null;
+    fetchProduct();
+  }, [id]);
+
+  if (!id) {
+    return (
+      <div className="text-center py-5">
+        <h2>Invalid product URL</h2>
+        <p className="text-muted">No product ID provided.</p>
+      </div>
+    );
   }
-}
 
-type ProductDetailPageProps = {
-  params: Promise<{
-    id: string;
-  }>;
-};
+  if (loading) {
+    return (
+      <div className="text-center py-5 text-muted">Loading product...</div>
+    );
+  }
 
-export default async function ProductDetailPage({
-  params,
-}: ProductDetailPageProps) {
-  const { id } = await params;
-  const product = await getProduct(id);
-
-  if (!product) {
+  if (error || !product) {
     return (
       <div className="text-center py-5">
         <h2>Product not found</h2>
