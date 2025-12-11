@@ -1,17 +1,21 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
 import { Product } from "@/types";
-
 export default function ProductsPage() {
-  const searchParams = useSearchParams();
-  const query = (searchParams.get("q") || "").toLowerCase().trim();
-
   const [products, setProducts] = useState<Product[]>([]);
+  const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const params = new URLSearchParams(window.location.search);
+    const q = (params.get("q") || "").toLowerCase().trim();
+    setQuery(q);
+  }, []);
 
   useEffect(() => {
     async function fetchProducts() {
