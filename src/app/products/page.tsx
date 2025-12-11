@@ -1,4 +1,3 @@
-// src/app/products/page.tsx
 import { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
 
@@ -10,6 +9,7 @@ async function getProducts(): Promise<Product[]> {
 
     if (!res.ok) {
       console.error("Failed to fetch products. Status:", res.status);
+
       return [];
     }
 
@@ -57,7 +57,7 @@ export default async function ProductsPage({
           <div className="col-12 text-center text-muted py-5">
             Oops, we couldn&apos;t load products right now.
             <br />
-            Please try again in a moment.
+            Please refresh the page or try again in a moment.
           </div>
         )}
 

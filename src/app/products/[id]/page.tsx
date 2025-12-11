@@ -25,7 +25,9 @@ type ProductDetailPageProps = {
   }>;
 };
 
-export default async function ProductDetailPage({ params }: ProductDetailPageProps) {
+export default async function ProductDetailPage({
+  params,
+}: ProductDetailPageProps) {
   const { id } = await params;
   const product = await getProduct(id);
 
@@ -34,7 +36,7 @@ export default async function ProductDetailPage({ params }: ProductDetailPagePro
       <div className="text-center py-5">
         <h2>Product not found</h2>
         <p className="text-muted">
-          We couldn&apos;t load this product. Please go back and try another item.
+          We couldn&apos;t load this product. Please go back and try again.
         </p>
       </div>
     );
