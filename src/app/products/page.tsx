@@ -1,12 +1,24 @@
+// src/app/products/page.tsx
 import { Product } from "@/types";
 import ProductCard from "@/components/ProductCard";
 
 async function getProducts(): Promise<Product[]> {
-  const res = await fetch("https://fakestoreapi.com/products", {
-    cache: "no-store",
-  });
-  if (!res.ok) throw new Error("Failed to fetch products");
-  return res.json();
+  try {
+    const res = await fetch("https://fakestoreapi.com/products", {
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      console.error("Failed to fetch products. Status:", res.status);
+      return [];
+    }
+
+    return res.json();
+  } catch (err) {
+    console.error("Error fetching products:", err);
+
+    return [];
+  }
 }
 
 type ProductsPageProps = {
@@ -41,15 +53,16 @@ export default async function ProductsPage({
       </div>
 
       <div className="row">
-        {filtered.length === 0 && (
+        {products.length === 0 && (
           <div className="col-12 text-center text-muted py-5">
-            No products found for <strong>{query}</strong>.
+            Oops, we couldn&apos;t load products right now.
+            <br />
+            Please try again in a moment.
           </div>
         )}
 
-        {filtered.map((p) => (
-          <ProductCard key={p.id} product={p} />
-        ))}
+        {filtered.length > 0 &&
+          filtered.map((p) => <ProductCard key={p.id} product={p} />)}
       </div>
     </div>
   );
