@@ -1,39 +1,42 @@
-import { Product } from "@/types";
+"use client";
+
+import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import ProductCard from "@/components/ProductCard";
+import { Product } from "@/types";
 
-async function getProducts(): Promise<Product[]> {
-  try {
-    const res = await fetch("https://fakestoreapi.com/products", {
-      cache: "no-store",
-    });
+export default function ProductsPage() {
+  const searchParams = useSearchParams();
+  const query = (searchParams.get("q") || "").toLowerCase().trim();
 
-    if (!res.ok) {
-      console.error("Failed to fetch products. Status:", res.status);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-      return [];
+  useEffect(() => {
+    async function fetchProducts() {
+      try {
+        setLoading(true);
+        setError(null);
+
+        const res = await fetch("https://fakestoreapi.com/products");
+
+        if (!res.ok) {
+          throw new Error(`Failed to fetch products. Status: ${res.status}`);
+        }
+
+        const data: Product[] = await res.json();
+        setProducts(data);
+      } catch (err) {
+        console.error("Error loading products:", err);
+        setError("Oops, we couldn't load products. Please try again.");
+      } finally {
+        setLoading(false);
+      }
     }
 
-    return res.json();
-  } catch (err) {
-    console.error("Error fetching products:", err);
-
-    return [];
-  }
-}
-
-type ProductsPageProps = {
-  searchParams: Promise<{
-    q?: string;
-  }>;
-};
-
-export default async function ProductsPage({
-  searchParams,
-}: ProductsPageProps) {
-  const products = await getProducts();
-
-  const sp = await searchParams;
-  const query = (sp?.q || "").toLowerCase().trim();
+    fetchProducts();
+  }, []);
 
   const filtered = query
     ? products.filter((p) => p.title.toLowerCase().includes(query))
@@ -52,18 +55,32 @@ export default async function ProductsPage({
         )}
       </div>
 
-      <div className="row">
-        {products.length === 0 && (
-          <div className="col-12 text-center text-muted py-5">
-            Oops, we couldn&apos;t load products right now.
-            <br />
-            Please refresh the page or try again in a moment.
-          </div>
-        )}
+      {loading && (
+        <div className="text-center text-muted py-5">Loading products...</div>
+      )}
 
-        {filtered.length > 0 &&
-          filtered.map((p) => <ProductCard key={p.id} product={p} />)}
-      </div>
+      {!loading && error && (
+        <div className="text-center text-danger py-5">{error}</div>
+      )}
+
+      {!loading && !error && (
+        <div className="row">
+          {filtered.length === 0 ? (
+            <div className="col-12 text-center text-muted py-5">
+              No products found
+              {query && (
+                <>
+                  {" "}
+                  for <strong>{query}</strong>
+                </>
+              )}
+              .
+            </div>
+          ) : (
+            filtered.map((p) => <ProductCard key={p.id} product={p} />)
+          )}
+        </div>
+      )}
     </div>
   );
 }
